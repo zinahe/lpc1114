@@ -1,7 +1,7 @@
 # Sources and targets
-TARGET			= i2c
-SOURCE			= startup.c i2c.c
-SOURCE_PATH		= C:\Users\Zinahe Asnake\Desktop\Electronics\ARM Projects\Experiment-3
+TARGET			= i2c_struct
+SOURCE			= startup.c i2c_struct.c
+SOURCE_PATH		= C:\Users\Zinahe Asnake\Desktop\Electronics\ARM Projects\4 - I2C v.2
 
 # Processor/Microcontroller family
 MCU				= cortex-m0
@@ -17,7 +17,8 @@ ECHO			= echo
 CFLAGS=-mthumb # 	           		  Using the Thumb Instruction Set
 CFLAGS+= -mcpu=$(MCU) #			      The MCU Family
 CFLAGS+= -Os # 						  Compile with Size Optimizations
-#CFLAGS+= -g #						  Generate debugging info
+CFLAGS+= -g #						  Generate debugging info
+#CFLAGS+= -v #						  Generate verbose output
 CFLAGS+= -ffunction-sections # 		  Create a separate function section
 CFLAGS+= -fdata-sections # 			  Create a separate data section
 CFLAGS+= -std=c99 # 				  Comply with C99
@@ -29,6 +30,8 @@ CFLAGS+= -Wa,-adhlns=$(<:%.c=%.lst) # Generate assembly files
 LDFLAGS=-Wl,--gc-sections # 						Linker to ignore sections that aren't used.
 LDFLAGS+= -Wl,-Map,$(TARGET).map #					Generate memory map file
 LDFLAGS+= -Wl,-T,"$(SOURCE_PATH)\$(TARGET).ld" # 	Path to Linker Script
+LDFLAGS+= -nostdlib
+# LDFLAGS+= -nostartfiles
 
 # Define object and assembly list files
 OBJ = $(SOURCE:%.c=%.o)

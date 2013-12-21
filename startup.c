@@ -11,10 +11,15 @@ extern uint32_t __ram_end;
 // Application entry point main() declaration
 int main(void);
 
-// Interrupt/Exception handler declarations
+// Default Handler
+void Default_Handler(void) {
+	while(1);
+}
+
+// Interrupt/Exception Handlers
 void Reset_Handler(void);
-void SysTick_Handler(void);
-void I2C_Handler(void);
+void SysTick_Handler(void) __attribute__((weak, alias("Default_Handler")));
+void I2C_Handler(void) __attribute__ ((weak, alias("Default_Handler")));
 
 // Interrupt Vector at address 0x00000000
 void (* __vectors[]) (void) __attribute__ ((section(".vectors"))) = {

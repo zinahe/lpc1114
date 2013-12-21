@@ -1,50 +1,58 @@
 #include <stdint.h>
 #include "LPC1114.h"
 
-#define FALSE 			0
-#define TRUE			1
-
 #define I2C_ADDRESS		0x20
 #define I2C_READ    	1
 #define I2C_WRITE   	0
 
+#define FALSE 			0
+#define TRUE			1
+
 // SysTick event counter
 volatile uint32_t SysTick_counter;
-
-// I2C wait flags
-volatile uint32_t I2C_start_continue;
-volatile uint32_t I2C_write_continue;
-
-// I2C data
-volatile unsigned char data;
+void SysTick_init(void);
+void wait(uint32_t time);
 
 // Function declarations
 void GPIO_init(void);
-void SysTick_init(void);
 
-void wait(uint32_t time);
+
+// I2C Task
+typedef struct I2CTask {
+	uint32_t address;					// I2C slave address
+	uint32_t action;					// I2C_READ, I2C_WRITE
+	volatile unsigned char *buffer;
+	uint32_t count;
+	uint32_t current;
+} I2CTask_t;
+
+volatile I2CTask_t *i2c_task;
+volatile uint32_t I2C_write_continue;
 
 void I2C_init(void);
-static void I2C_start(unsigned char);
-void I2C_write(unsigned char);
+void I2C_write(I2CTask_t *);
 
 int main() {
+
+	unsigned char buffer[1];
+	I2CTask_t task = { I2C_ADDRESS, I2C_WRITE, buffer, 1, 0 };
+		
+	// Initialize peripherals
 	GPIO_init();
-	
 	SysTick_init();
-	
 	I2C_init();
 	
-	// I2C_start((I2C_ADDRESS << 1) | I2C_WRITE);
-	I2C_start(0x00);
-	
+	// Loop
 	while(1) {
-		GPIO1DATA |= (1 << PIO1_9);			// Turn ON
-		data = 0x00;						// Load I2C data to transmit
-		wait(100);
-		GPIO1DATA &= ~(1 << PIO1_9);   		// Turn OFF
-		data = 0xFF;						// Load I2C data to transmit
-		wait(100);
+		GPIO1DATA |= (1 << PIO1_9);			// LED ON
+		task.buffer[0] = 0xFF;
+		I2C_write(&task);
+		wait(150);
+		
+		GPIO1DATA &= ~(1 << PIO1_9);   		// LED OFF
+		task.buffer[0] = 0x00;
+		I2C_write(&task);
+		wait(150);
 	} 
 	
 }
@@ -63,7 +71,7 @@ void GPIO_init(void) {
 	SYSAHBCLKCTRL |= (1 << SYSAHBCLKCTRL_IOCON_BIT);
 		
 	//  Configure PIO1_9 as General Purpose IO (Reset value = 0xD0)
-	//  IOCON_PIO1_9 = 0xD0;	
+	IOCON_PIO1_9 = 0xC0;		// No pull-up resistor
 
 	//  Configure PIO1_9 as Output (pp.188)
 	GPIO1DIR = (1 << PIO1_9); 		//0x200;
@@ -81,6 +89,10 @@ void SysTick_init(void) {
 	SYSTICK_CSR |= (1 << SYSTICK_CLKSOURCE_BIT) | (1 << SYSTICK_TICKINT_BIT) | (1 << SYSTICK_ENABLE_BIT);
 }
 
+void SysTick_Handler(void) {
+	SysTick_counter++;
+}
+
 void I2C_init(void) {
 	
 	// Configure I2C Mode and Function for pins PIO0_4 and PIO0_5 (FUNC=001:I2C, I2CMODE=00:Standard/Fast Mode)
@@ -93,7 +105,7 @@ void I2C_init(void) {
 	// Reset I2C Block
 	PRESETCTRL |= (1 << PRESETCTRL_I2C_BIT);
 	
-	// Set I2C Clock Rate (100KHz, I2C_CLK_H + I2C_CLK_L = 120, @12MHz system clock )
+	// Set I2C Clock Rate (100KHz, CYCLE_H + CYCLE_L = 120, @12MHz system clock )
 	I2C_CLK_H = 0x3C;
 	I2C_CLK_L = 0x3C;
 		
@@ -104,49 +116,38 @@ void I2C_init(void) {
 	NVIC_SETENA = (1 << NVIC_I2C_BIT);
 }
 
-static void I2C_start(unsigned char addr) {
-
-	I2C_start_continue = FALSE;
-	
-	// Transmit START condition 
-	I2C_CTRL_SET = (1 << I2C_CTRL_STA_BIT);
-	
-	// Wait
-	while(!I2C_start_continue);
-	
-}
-
-/*
-void I2C_write(unsigned char data) {
+void I2C_write(I2CTask_t *task) {
 	
 	I2C_write_continue = FALSE;
 	
-	// Load data 
-	I2C_DATA = (uint32_t) data;
+	// Reset current counter and attach global object
+	i2c_task = task;
+	i2c_task->current = 0;
+		
+	// Transmit START condition (triggers the start of a hardware state machine)
+	I2C_CTRL_SET = (1 << I2C_CTRL_STA_BIT);
 	
-	// Wait
+	// Wait until all bytes in the buffer are sent
 	while(!I2C_write_continue);
+	
 }
-*/
 
 void I2C_Handler(void) {
 	
-	//GPIO1DATA |= (1 << PIO1_9);			// Turn ON
-	
 	switch(I2C_STATUS) {
-		case 0x08:				// START condition asserted
+		case 0x08:				// START condition successful
 			
-			// Load I2C slave address 
-			I2C_DATA = (I2C_ADDRESS << 1) | I2C_WRITE;
+			// Load I2C slave address and data direction (Read/Write)
+			I2C_DATA = (i2c_task->address << 1) | i2c_task->action;
 			
 			// Clear SI and STA bits
 			I2C_CTRL_CLR = (1 << I2C_CTRL_STA_BIT) | (1 << I2C_CTRL_SI_BIT);
 			
 			break;
-		case 0x18:				// Slave ADDR : WRITE sent + ACK received
+		case 0x18:				// Slave ADDR : WRITE sent + ACK received. 
 		
-			// Flag to continue
-			I2C_start_continue = TRUE;
+			// Send first byte from buffer
+			I2C_DATA = (uint32_t) i2c_task->buffer[i2c_task->current++];
 			
 			// Clear the SI bit
 			I2C_CTRL_CLR = (1 << I2C_CTRL_SI_BIT);
@@ -154,10 +155,20 @@ void I2C_Handler(void) {
 			break;
 		case 0x28:				// DATA transmitted
 		
-			I2C_DATA = data;
+				
+			if (i2c_task->current < i2c_task->count) {
 			
-			// Flag to continue
-			I2C_write_continue = TRUE;
+				// Load next available byte from buffer
+				I2C_DATA = (uint32_t) i2c_task->buffer[i2c_task->current++];
+			} 
+			else {
+				
+				// Flag to continue
+				I2C_write_continue = TRUE;
+				
+				// Transmit STOP condition
+				I2C_CTRL_SET = (1 << I2C_CTRL_STO_BIT);
+			} 
 			
 			// Clear the SI bit
 			I2C_CTRL_CLR = (1 << I2C_CTRL_SI_BIT);
@@ -165,11 +176,6 @@ void I2C_Handler(void) {
 			break;
 	}
 }
-
-void SysTick_Handler(void) {
-	SysTick_counter++;
-}
-
 
 
 
