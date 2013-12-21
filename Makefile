@@ -1,6 +1,6 @@
 # Sources and targets
-TARGET			= i2c_struct
-SOURCE			= startup.c i2c_struct.c
+TARGET			= main
+SOURCE			= startup.c main.c lcd.c
 #SOURCE_PATH		= C:\Users\Zinahe Asnake\Desktop\Electronics\ARM Projects\Experiment-4
 
 # Processor/Microcontroller family

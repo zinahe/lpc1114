@@ -1,7 +1,7 @@
 #include <stdint.h>
 #include "LPC1114.h"
 
-#define I2C_ADDRESS		0x20
+//#define I2C_ADDRESS		0x20
 #define I2C_READ    	1
 #define I2C_WRITE   	0
 
@@ -21,7 +21,7 @@ volatile I2CTask_t *i2c_task;
 volatile uint32_t I2C_write_continue;
 
 void I2C_init(void);
-void I2C_write(uint8_t byte);
+void I2C_write(uint8_t address, uint8_t byte);
 
 void I2C_init(void) {
 	
@@ -49,11 +49,12 @@ void I2C_init(void) {
 	NVIC_SETENA = (1 << NVIC_I2C_BIT);
 }
 
-void I2C_write(uint8_t byte) {
+void I2C_write(uint8_t address, uint8_t byte) {
 	
 	// Create and attach the global object
 	// Note: Creation needs to happen on every call to write(), hence volatile
-	volatile I2CTask_t task = { I2C_ADDRESS, I2C_WRITE, &byte, 1, 0 };			
+	//volatile I2CTask_t task = { I2C_ADDRESS, I2C_WRITE, &byte, 1, 0 };
+	volatile I2CTask_t task = { address, I2C_WRITE, &byte, 1, 0 };		
 	i2c_task = &task;
 		
 	// Reset wait flag
