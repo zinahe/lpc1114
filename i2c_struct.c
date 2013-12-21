@@ -14,7 +14,7 @@ void SysTick_init(void);
 void wait(uint32_t time);
 
 // Function declarations
-void GPIO_init(void);
+// void GPIO_init(void);
 
 
 // I2C Task
@@ -35,19 +35,20 @@ void I2C_write(uint8_t byte);
 int main() {
 
 	// Initialize peripherals
-	GPIO_init();
+	//GPIO_init();
+	
 	SysTick_init();
 	I2C_init();
 	
 	// Loop
 	while(1) {
-		GPIO1DATA |= (1 << PIO1_9);			// LED ON
+		//GPIO1DATA |= (1 << PIO1_9);			// LED ON
 		I2C_write(0xFF);
 		wait(100);
 		
-		GPIO1DATA &= ~(1 << PIO1_9);   		// LED OFF
+		//GPIO1DATA &= ~(1 << PIO1_9);   		// LED OFF
 		I2C_write(0x00);
-		wait(100);
+		wait(10);
 	} 
 	
 }
@@ -55,12 +56,13 @@ int main() {
 void wait(uint32_t time) {
 	
 	SysTick_counter = 0;
-	while (SysTick_counter < time) {
-		// Wait until SysTick increments counter enough times
-	}
+	
+	// Wait until SysTick increments counter enough times
+	while (SysTick_counter < time);
+	
 }
 
-void GPIO_init(void) {
+/* void GPIO_init(void) {
 	
 	// Enable Clock to IOCON Configuration Block (pp. 30)
 	SYSAHBCLKCTRL |= (1 << SYSAHBCLKCTRL_IOCON_BIT);
@@ -71,6 +73,7 @@ void GPIO_init(void) {
 	//  Configure PIO1_9 as Output (pp.188)
 	GPIO1DIR = (1 << PIO1_9); 		//0x200;
 }
+*/
 
 void SysTick_init(void) {
 	
@@ -90,12 +93,15 @@ void SysTick_Handler(void) {
 
 void I2C_init(void) {
 	
+	// Enable I2C and IOCON Clocks
+	SYSAHBCLKCTRL |= (1 << SYSAHBCLKCTRL_I2C_BIT) | (1 << SYSAHBCLKCTRL_IOCON_BIT);
+	
 	// Configure I2C Mode and Function for pins PIO0_4 and PIO0_5 (FUNC=001:I2C, I2CMODE=00:Standard/Fast Mode)
 	IOCON_PIO0_4 = 0x01;
 	IOCON_PIO0_5 = 0x01;
 	
 	// Enable I2C Clock
-	SYSAHBCLKCTRL |= (1 << SYSAHBCLKCTRL_I2C_BIT);
+	//SYSAHBCLKCTRL |= (1 << SYSAHBCLKCTRL_I2C_BIT);
 	
 	// Reset I2C Block
 	PRESETCTRL |= (1 << PRESETCTRL_I2C_BIT);
@@ -110,23 +116,6 @@ void I2C_init(void) {
 	// Enable I2C Interrupt
 	NVIC_SETENA = (1 << NVIC_I2C_BIT);
 }
-
-/* void I2C_write(I2CTask_t *task) {
-	
-	I2C_write_continue = FALSE;
-	
-	// Reset current counter and attach global object
-	i2c_task = task;
-	i2c_task->current = 0;
-		
-	// Transmit START condition (triggers the start of a hardware state machine)
-	I2C_CTRL_SET = (1 << I2C_CTRL_STA_BIT);
-	
-	// Wait until all bytes in the buffer are sent
-	while(!I2C_write_continue);
-	
-}
-*/
 
 void I2C_write(uint8_t byte) {
 	
@@ -145,6 +134,7 @@ void I2C_write(uint8_t byte) {
 	while(!I2C_write_continue);
 	
 }
+
 void I2C_Handler(void) {
 	
 	switch(I2C_STATUS) {
