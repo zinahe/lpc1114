@@ -21,7 +21,7 @@ void GPIO_init(void);
 typedef struct I2CTask {
 	uint32_t address;					// I2C slave address
 	uint32_t action;					// I2C_READ, I2C_WRITE
-	volatile unsigned char *buffer;
+	volatile uint8_t *buffer;
 	uint32_t count;
 	uint32_t current;
 } I2CTask_t;
@@ -30,13 +30,10 @@ volatile I2CTask_t *i2c_task;
 volatile uint32_t I2C_write_continue;
 
 void I2C_init(void);
-void I2C_write(I2CTask_t *);
+void I2C_write(uint8_t byte);
 
 int main() {
 
-	unsigned char buffer[1];
-	I2CTask_t task = { I2C_ADDRESS, I2C_WRITE, buffer, 1, 0 };
-		
 	// Initialize peripherals
 	GPIO_init();
 	SysTick_init();
@@ -45,14 +42,12 @@ int main() {
 	// Loop
 	while(1) {
 		GPIO1DATA |= (1 << PIO1_9);			// LED ON
-		task.buffer[0] = 0xFF;
-		I2C_write(&task);
-		wait(150);
+		I2C_write(0xFF);
+		wait(100);
 		
 		GPIO1DATA &= ~(1 << PIO1_9);   		// LED OFF
-		task.buffer[0] = 0x00;
-		I2C_write(&task);
-		wait(150);
+		I2C_write(0x00);
+		wait(100);
 	} 
 	
 }
@@ -116,7 +111,7 @@ void I2C_init(void) {
 	NVIC_SETENA = (1 << NVIC_I2C_BIT);
 }
 
-void I2C_write(I2CTask_t *task) {
+/* void I2C_write(I2CTask_t *task) {
 	
 	I2C_write_continue = FALSE;
 	
@@ -131,7 +126,25 @@ void I2C_write(I2CTask_t *task) {
 	while(!I2C_write_continue);
 	
 }
+*/
 
+void I2C_write(uint8_t byte) {
+	
+	// Create and attach the global object
+	// Note: Creation needs to happen on every call to write(), hence volatile
+	volatile I2CTask_t task = { I2C_ADDRESS, I2C_WRITE, &byte, 1, 0 };			
+	i2c_task = &task;
+		
+	// Reset wait flag
+	I2C_write_continue = FALSE;
+	
+	// Transmit START condition (triggers the start of a hardware state machine)
+	I2C_CTRL_SET = (1 << I2C_CTRL_STA_BIT);
+	
+	// Wait on flag (until all bytes in the buffer are sent)
+	while(!I2C_write_continue);
+	
+}
 void I2C_Handler(void) {
 	
 	switch(I2C_STATUS) {
