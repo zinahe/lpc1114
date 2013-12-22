@@ -24,16 +24,13 @@ void I2C_init(void);
 void I2C_write(uint8_t address, uint8_t byte);
 
 void I2C_init(void) {
-	
+
 	// Enable I2C and IOCON Clocks
 	SYSAHBCLKCTRL |= (1 << SYSAHBCLKCTRL_I2C_BIT) | (1 << SYSAHBCLKCTRL_IOCON_BIT);
 	
 	// Configure I2C Mode and Function for pins PIO0_4 and PIO0_5 (FUNC=001:I2C, I2CMODE=00:Standard/Fast Mode)
 	IOCON_PIO0_4 = 0x01;
 	IOCON_PIO0_5 = 0x01;
-	
-	// Enable I2C Clock
-	//SYSAHBCLKCTRL |= (1 << SYSAHBCLKCTRL_I2C_BIT);
 	
 	// Reset I2C Block
 	PRESETCTRL |= (1 << PRESETCTRL_I2C_BIT);
@@ -53,10 +50,10 @@ void I2C_write(uint8_t address, uint8_t byte) {
 	
 	// Create and attach the global object
 	// Note: Creation needs to happen on every call to write(), hence volatile
-	//volatile I2CTask_t task = { I2C_ADDRESS, I2C_WRITE, &byte, 1, 0 };
+
 	volatile I2CTask_t task = { address, I2C_WRITE, &byte, 1, 0 };		
 	i2c_task = &task;
-		
+	
 	// Reset wait flag
 	I2C_write_continue = FALSE;
 	
