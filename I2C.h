@@ -1,7 +1,7 @@
 #include <stdint.h>
 #include "LPC1114.h"
 
-#define I2C_ADDRESS		0x20
+#define I2C_ADDRESS		0x22
 #define I2C_READ    	1
 #define I2C_WRITE   	0
 

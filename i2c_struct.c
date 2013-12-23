@@ -4,6 +4,10 @@
 #include "I2C.h"
 #include "GPIO.h"
 
+void GPIO_callback(uint32_t data) {
+	GPIO1DATA ^= (1 << PIO1_9);
+}
+
 int main() {
 
 	// Initialize peripherals
@@ -11,14 +15,19 @@ int main() {
 	GPIO_init();
 	I2C_init();
 	
+	Timer_t timer = {10, 0, 0, GPIO_callback};
+	SysTick_run(&timer);
+	
 	// Loop
+	//while(1);
+	
+	
+	
 	while(1) {
 	
-		GPIO1DATA |= (1 << PIO1_9);			// LED ON
 		I2C_write(0xFF);
 		wait(100);
 		
-		GPIO1DATA &= ~(1 << PIO1_9);   		// LED OFF
 		I2C_write(0x00);
 		wait(10);
 	} 
