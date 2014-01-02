@@ -1,6 +1,6 @@
 # Sources and targets
 TARGET			= main
-SOURCE			= startup.c main.c lcd.c
+SOURCE			= startup.c main.c lcd.c SysTick.c
 #SOURCE_PATH		= C:\Users\Zinahe Asnake\Desktop\Electronics\ARM Projects\Experiment-4
 
 # Processor/Microcontroller family
