@@ -3,14 +3,31 @@
 #include "SysTick.h"
 
 volatile uint32_t SysTick_counter;
-volatile Timer_t *SysTick_timer;
+volatile Timer_t * volatile SysTick_timer_start;
+volatile Timer_t * volatile SysTick_timer_current;
 
 // Definitions
-void SysTick_run(Timer_t *timer) {
-	SysTick_timer = timer;
+
+//void SysTick_run(volatile Timer_t * volatile timer) {
+void SysTick_run(Timer_t * timer) {
+
+	if (SysTick_timer_start == 0) {
+		
+		// Attach the very first timer
+		SysTick_timer_start = timer;
+		SysTick_timer_current = timer;
+		timer->next = timer;
+		
+		// Enable SysTick block
+		SYSTICK_CSR |= (1 << SYSTICK_ENABLE_BIT);
+	} else {
 	
-	// Enable SysTick block
-	SYSTICK_CSR |= (1 << SYSTICK_ENABLE_BIT);
+		// Add new timer between start and current timers
+		timer->next = SysTick_timer_start;
+		SysTick_timer_current->next = timer;
+		SysTick_timer_current = timer;
+	}
+	
 }
 
 void wait(uint32_t time) {
@@ -37,16 +54,33 @@ void SysTick_init(void) {
 	// Enable SysTick, on CPU clock and Enable SysTick interrupt (pp. 402)
 	//SYSTICK_CSR |= (1 << SYSTICK_CLKSOURCE_BIT) | (1 << SYSTICK_TICKINT_BIT) | (1 << SYSTICK_ENABLE_BIT);
 	SYSTICK_CSR |= (1 << SYSTICK_CLKSOURCE_BIT) | (1 << SYSTICK_TICKINT_BIT);
+	
+	// Initialize timer pointers
+	SysTick_timer_start = 0;
+	SysTick_timer_current = 0;
 }
 
 void SysTick_Handler(void) {
 
 	SysTick_counter++;
-	SysTick_timer->counter++;
+	
+	if (SysTick_timer_start != 0) {
 		
-	if (SysTick_timer->interval == SysTick_timer->counter) {
-		SysTick_timer->callback(SysTick_timer->state);
-		SysTick_timer->counter = 0;
+		do {
+			// Icrement timer counter
+			SysTick_timer_current->next->counter++;
+		
+			// Toggle timer state
+			//SysTick_timer_current->next->state ^= 0xFF;
+		
+			// Reset counter and fire callback function
+			if (SysTick_timer_current->next->interval == SysTick_timer_current->next->counter) {
+				SysTick_timer_current->next->callback(SysTick_timer_current->next->state);
+				SysTick_timer_current->next->counter = 0;
+			}
+			
+			SysTick_timer_current = SysTick_timer_current->next;
+		} while (SysTick_timer_current->next != SysTick_timer_start);
 	}
 	
 }
