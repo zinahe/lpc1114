@@ -3,6 +3,7 @@
 #include "lcd.h"
 #include "GPIO.h"
 #include "SysTick.h"
+#include "I2C.h"
 
 #define PCF8574_I2C_ADDRESS		0x22
 
@@ -25,15 +26,15 @@ int main() {
     lcd_set_backlight(LCD_BACKLIGHT_ON);
 		
 	// Create and setup GPIO timer
-	Timer_t timer = {50, 0, 0, 0, GPIO_callback_ON};
+	Timer_t timer = {35, 0, 0, 0, GPIO_callback_ON};
 	SysTick_run(&timer);
 
 	// Create and setup I2C timer
-	Timer_t timer2 = {100, 0, 0, 0, GPIO_callback_OFF};
+	Timer_t timer2 = {50, 0, 0, 0, GPIO_callback_OFF};
 	SysTick_run(&timer2);	
 	
 	while(1) {
-		lcd_write("Hello Zinahe");
+		lcd_write("Hello USA");
 		I2C_write(PCF8574_I2C_ADDRESS, 0xFF);				// I2C LED OFF				
 		wait(75);
 		lcd_clear();

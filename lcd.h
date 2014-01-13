@@ -1,3 +1,6 @@
+#ifndef LCD_H
+#define LCD_H
+
 #include <stdint.h>
 
 // LCD I2C Address
@@ -65,3 +68,5 @@ void lcd_clear(void) ;
 void lcd_write(char *s) ;
 
 void lcd_goto(uint32_t y, uint32_t x);
+
+#endif
