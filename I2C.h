@@ -4,7 +4,6 @@
 #include <stdint.h>
 #include "LPC1114.h"
 
-//#define I2C_ADDRESS		0x20
 #define I2C_READ    	1
 #define I2C_WRITE   	0
 
@@ -22,6 +21,7 @@ typedef struct I2CTask {
 
 
 void I2C_init(void);
-void I2C_write(uint8_t address, uint8_t byte);
+void I2C_write(uint32_t address, uint8_t *byte, uint32_t count);
+void I2C_read(uint32_t address, uint8_t *byte, uint32_t count);
 
-#endif
+#endif /* I2C_H */

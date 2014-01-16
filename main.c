@@ -17,6 +17,8 @@ void GPIO_callback_OFF(uint32_t data) {
 
 
 int main() {
+	// I2C byte data
+	uint8_t data;
 
 	// Initialize LCD (which in turn initializes I2C and SysTick)
 	lcd_init();
@@ -34,13 +36,15 @@ int main() {
 	SysTick_run(&timer2);	
 	
 	while(1) {
-		lcd_write("Hello USA");
-		I2C_write(PCF8574_I2C_ADDRESS, 0xFF);				// I2C LED OFF				
+		lcd_write("Hello New");
+		data = 0xFF;
+		I2C_write(PCF8574_I2C_ADDRESS, &data, 1);				// I2C LED OFF				
 		wait(75);
 		lcd_clear();
 		
-		lcd_write("Hello Lily");
-		I2C_write(PCF8574_I2C_ADDRESS, 0x00);				// I2C LED ON
+		lcd_write("Hello Old");
+		data = 0x00;
+		I2C_write(PCF8574_I2C_ADDRESS, &data, 1);				// I2C LED ON
 		wait(75);
 		lcd_clear();
 	}

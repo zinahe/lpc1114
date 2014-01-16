@@ -1,7 +1,7 @@
 # Sources and targets
 TARGET			= main
+#SOURCE			= startup.c test_I2C.c I2C.c
 SOURCE			= startup.c main.c lcd.c SysTick.c I2C.c
-#SOURCE_PATH		= C:\Users\Zinahe Asnake\Desktop\Electronics\ARM Projects\Experiment-4
 
 # Processor/Microcontroller family
 MCU				= cortex-m0
@@ -31,7 +31,6 @@ LDFLAGS=-Wl,--gc-sections # 						Linker to ignore sections that aren't used.
 LDFLAGS+= -Wl,-Map,$(TARGET).map #					Generate memory map file
 LDFLAGS+= -Wl,-T,".\$(TARGET).ld" # 	Path to Linker Script
 LDFLAGS+= -nostdlib
-# LDFLAGS+= -Wl,-T,"$(SOURCE_PATH)\$(TARGET).ld" # 	Path to Linker Script
 # LDFLAGS+= -nostartfiles
 
 # Define object and assembly list files

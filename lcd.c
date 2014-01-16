@@ -10,15 +10,15 @@ void lcd_send_nibble(uint8_t nibble, uint8_t reg) {
 
 	nibble &= 0xF0;
 	nibble |= (lcd_backlight | reg);
-	I2C_write(LCD_I2C_ADDR, nibble);
+	I2C_write(LCD_I2C_ADDR, &nibble, 1);
 
 	// Set ENABLE high
 	nibble |= (1 << LCD_EN);		// _BV(LCD_EN)
-	I2C_write(LCD_I2C_ADDR, nibble);
+	I2C_write(LCD_I2C_ADDR, &nibble, 1);
 
 	// Pull ENABLE low
 	nibble &= ~(1 << LCD_EN);
-	I2C_write(LCD_I2C_ADDR, nibble);
+	I2C_write(LCD_I2C_ADDR, &nibble, 1);
 }
 
 void lcd_send_byte(uint8_t nibble, uint8_t reg) {
@@ -103,6 +103,6 @@ void lcd_set_backlight(uint8_t backlight) {
 
 	lcd_backlight = backlight;
 
-	I2C_write(LCD_I2C_ADDR, backlight);
+	I2C_write(LCD_I2C_ADDR, &backlight, 1);
 	
 }
