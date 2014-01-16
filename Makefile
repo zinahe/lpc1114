@@ -1,7 +1,7 @@
 # Sources and targets
 TARGET			= main
 #SOURCE			= startup.c test_I2C.c I2C.c
-SOURCE			= startup.c main.c lcd.c SysTick.c I2C.c
+SOURCE			= startup.c main.c lcd.c SysTick.c I2C.c GPIO.c
 
 # Processor/Microcontroller family
 MCU				= cortex-m0

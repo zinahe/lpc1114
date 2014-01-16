@@ -1,3 +1,6 @@
+#ifndef LPC1114_H
+#define LPC1114_H
+
 // Memory Mapped Peripheral Control Registers must be accessed as volatile to avoid compiler optimization
 #define  MMIO(addr) 					(*(volatile int*) addr)
 
@@ -55,8 +58,7 @@
 #define I2C_CTRL_STA_BIT				5
 #define I2C_CTRL_I2EN_BIT				6
 
-// LED pin
-#define PIO1_9 							9
+#endif /* LPC1114_H */
 
 
 
