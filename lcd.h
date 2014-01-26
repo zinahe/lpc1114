@@ -57,9 +57,9 @@
 
 void lcd_init(void) ;
 
-void lcd_send_nibble(uint8_t nibble, uint8_t reg);
+//void lcd_send_nibble(uint8_t nibble, uint8_t reg);
 
-void lcd_send_byte(uint8_t nibble, uint8_t reg);
+//void lcd_send_byte(uint8_t nibble, uint8_t reg);
 
 void lcd_set_backlight(uint8_t backlight);
 
@@ -69,4 +69,4 @@ void lcd_write(char *s) ;
 
 void lcd_goto(uint32_t y, uint32_t x);
 
-#endif
+#endif /* LCD_H */

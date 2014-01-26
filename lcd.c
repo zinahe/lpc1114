@@ -6,14 +6,14 @@
 
 volatile uint8_t lcd_backlight;
 
-void lcd_send_nibble(uint8_t nibble, uint8_t reg) {
+static void lcd_send_nibble(uint8_t nibble, uint8_t reg) {
 
 	nibble &= 0xF0;
 	nibble |= (lcd_backlight | reg);
 	I2C_write(LCD_I2C_ADDR, &nibble, 1);
 
 	// Set ENABLE high
-	nibble |= (1 << LCD_EN);		// _BV(LCD_EN)
+	nibble |= (1 << LCD_EN);		
 	I2C_write(LCD_I2C_ADDR, &nibble, 1);
 
 	// Pull ENABLE low
@@ -21,7 +21,7 @@ void lcd_send_nibble(uint8_t nibble, uint8_t reg) {
 	I2C_write(LCD_I2C_ADDR, &nibble, 1);
 }
 
-void lcd_send_byte(uint8_t nibble, uint8_t reg) {
+static void lcd_send_byte(uint8_t nibble, uint8_t reg) {
 
 	// Send 4 most significant bits
 	lcd_send_nibble(nibble, reg);
@@ -29,8 +29,6 @@ void lcd_send_byte(uint8_t nibble, uint8_t reg) {
 	// Send 4 least significant bits
 	lcd_send_nibble(nibble << 4, reg);
 }
-
-
 
 void lcd_init(void) {
 
@@ -97,7 +95,6 @@ void lcd_goto(uint32_t y, uint32_t x) {
 
 	lcd_send_byte(ddram_addr, LCD_INSTRUCTION);
 }
-
 
 void lcd_set_backlight(uint8_t backlight) {
 
