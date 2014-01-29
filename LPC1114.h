@@ -152,7 +152,7 @@
 #define UART_MCR_AUTOCTS_BIT			7
 
 // UART Line Status Register (LSR) bits
-#define UART_LSR_RDA_BIT				0
+#define UART_LSR_RDA_BIT				0						// RX Data Available
 #define UART_LSR_OVERRUN_ERROR_BIT		1
 #define UART_LSR_PARITY_ERROR_BIT		2
 #define UART_LSR_FRAME_ERROR_BIT		3

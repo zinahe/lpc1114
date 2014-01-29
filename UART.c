@@ -29,6 +29,23 @@ void UART_init(void) {
 	UARTCLKDIV = 0x01;
 }
 
-void UART_send(uint8_t byte) {
-	UART_THR = byte;
+void UART_write(uint8_t *byte, int count) {
+		
+	for (int i = 0; i < count; i++) {
+	
+		// Send a byte from buffer
+		UART_THR = *byte++;
+		
+		// Wait while THR contains data (until empty)
+		while( (UART_LSR & (1 << UART_LSR_THRE_BIT)) == 0 );
+	}
+	
+}
+
+uint8_t UART_read(void) {
+	
+	// Wait until there is data in RBR
+	while( (UART_LSR & (1 << UART_LSR_RDA_BIT)) == 0);
+	
+	return UART_RBR;
 }
