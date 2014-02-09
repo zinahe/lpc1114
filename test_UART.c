@@ -25,13 +25,16 @@ int main(void) {
 	GPIO_init();
 	
 	// Create and setup timer for UART TX 
-	Timer_t timer = {50, 0, 0, 0, UART_callback};
-	SysTick_run(&timer);
+	//Timer_t timer = {50, 0, 0, 0, UART_callback};
+	//SysTick_run(&timer);
 		
 	while(1) {
 	
 		// Read data from UART
 		data[0] = UART_read();
+		
+		// Write data back to UART
+		UART_write(data, 1);
 		
 		// Send data to LCD
 		lcd_write(data);
