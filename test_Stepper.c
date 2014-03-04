@@ -38,20 +38,26 @@ void main() {
 		
 		if (data[0] == 'a') {
 		
-			// Write stepper sequence to I2C
-			temp = (uint8_t) sequence[index--];
-			I2C_write(PCF8574_I2C_ADDRESS, &temp, 1);
-		
+			index--;
+			
 			// Reset index
 			if (index == -1) index = 3;
 		
-		} else {
 			// Write stepper sequence to I2C
-			temp = (uint8_t) sequence[index++];
+			temp = (uint8_t) sequence[index];
 			I2C_write(PCF8574_I2C_ADDRESS, &temp, 1);
+		
+		} else {
+			
+			index++;
 		
 			// Reset index
 			if (index == 4) index = 0;
+		
+			// Write stepper sequence to I2C
+			temp = (uint8_t) sequence[index];
+			I2C_write(PCF8574_I2C_ADDRESS, &temp, 1);
+
 		}
 		
 

@@ -3,14 +3,23 @@
 #include "GPIO.h"
 #include "lcd.h"
 
-//void send_message(uint8_t *);
-void UART_callback(void) {
+/*
+void UART_TX_callback(void) {
 	
 	UART_write("Hi Mamo", 7);
 	
 	// Toggle LED
 	GPIO1DATA ^= (1 << PIO1_9);
 }
+
+void UART_RX_callback(uint8_t uart_data) {
+	
+	data[0] = uart_data;
+	
+	// Toggle LED
+	GPIO1DATA ^= (1 << PIO1_9);
+}
+*/
 
 int main(void) {
 
@@ -24,21 +33,16 @@ int main(void) {
 	UART_init();
 	GPIO_init();
 	
-	// Create and setup timer for UART TX 
-	//Timer_t timer = {50, 0, 0, 0, UART_callback};
-	//SysTick_run(&timer);
-		
 	while(1) {
 	
 		// Read data from UART
-		data[0] = UART_read();
-		
+		data[0] = UART_read(0);
+				
 		// Write data back to UART
 		UART_write(data, 1);
 		
 		// Send data to LCD
 		lcd_write(data);
-		
 	}
 
 }

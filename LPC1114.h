@@ -48,8 +48,9 @@
 #define NVIC_SETENA						MMIO(0xE000E100)
 #define NVIC_CLRENA						MMIO(0xE000E180)
 
-// NVIC IRQ I2C
+// NVIC IRQs
 #define NVIC_I2C_BIT					15
+#define NVIC_UART_BIT					21
 
 // I2C Peripheral REgisters
 #define I2C_CTRL_SET					MMIO(0x40000000)

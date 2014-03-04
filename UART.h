@@ -5,7 +5,8 @@
 
 void UART_init(void); 
 void UART_write(uint8_t*, int);
-uint8_t UART_read(void);
+//uint8_t UART_read(void);
+uint8_t UART_read(void (*)(uint8_t));
 
 #endif /* UART_H */
 

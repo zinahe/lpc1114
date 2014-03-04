@@ -20,6 +20,7 @@ void Default_Handler(void) {
 void Reset_Handler(void);
 void SysTick_Handler(void) __attribute__((weak, alias("Default_Handler")));
 void I2C_Handler(void) __attribute__ ((weak, alias("Default_Handler")));
+void UART_Handler(void) __attribute__ ((weak, alias("Default_Handler")));
 
 // Interrupt Vector at address 0x00000000
 void (* __vectors[]) (void) __attribute__ ((section(".vectors"))) = {
@@ -54,7 +55,13 @@ void (* __vectors[]) (void) __attribute__ ((section(".vectors"))) = {
 	0,					// IRQ12
 	0,					// IRQ13
 	0,					// IRQ14
-	I2C_Handler			// IRQ15
+	I2C_Handler,		// IRQ15
+	0,					// IRQ16
+	0,					// IRQ17
+	0,					// IRQ18
+	0,					// IRQ19
+	0,					// IRQ20
+	UART_Handler		// IRQ21
 };
 
 void Reset_Handler(void) {
