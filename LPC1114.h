@@ -175,6 +175,41 @@
 /**********************    End of UART   *****************/
 
 
+/**********************      SYSPLL      *****************/
+
+#define SYSPLLCTRL						MMIO(0x40048008)
+#define SYSPLLCTRL_MDIV_BIT				0
+
+#define SYSPLLCTRL_PDIV_BIT 			5
+#define SYSPLLCTRL_PDIV_MASK			0b01100000
+#define SYSPLLCTRL_PDIV_01				0x0
+#define SYSPLLCTRL_PDIV_02				0x1
+#define SYSPLLCTRL_PDIV_04				0x2
+#define SYSPLLCTRL_PDIV_08				0x3
+
+#define SYSPLLSTAT						MMIO(0x4004800C)
+#define SYSPLLSTAT_LOCKED				0x1
+
+#define MAINCLKSEL						MMIO(0x40048070)
+#define MAINCLKSEL_IRC					0x0
+#define MAINCLKSEL_PLLIN				0x1
+#define MAINCLKSEL_WDT					0x2
+#define MAINCLKSEL_PLLOUT				0x3
+
+#define MAINCLKUEN						MMIO(0x40048074)
+#define MAINCLKUEN_OFF					0x0
+#define MAINCLKUEN_ON					0x1
+
+#define PDCONFIG 						MMIO(0x40048238)
+#define PDCONFIG_SYSPLL_BIT				7
+#define PDCONFIG_SYSPLL_ON				0x0
+#define PDCONFIG_SYSPLL_OFF				0x1
+
+#define SYSPLLCLKSEL					MMIO(0x40048040)
+#define SYSPLLCLKSEL_IRC				0x0
+#define SYSPLLCLKSEL_OSC				0x1
+
+/**********************   End of SYSPLL  *****************/
 
 #endif /* LPC1114_H */
 
