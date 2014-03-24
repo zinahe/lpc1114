@@ -48,7 +48,10 @@ void wait(uint32_t time) {
 void SysTick_init(void) {
 	
 	// SysTick Reload Value Register, 10ms interval using the Internal RC @12Mhz (pp. 403)
-	SYSTICK_RVR = 0x1D4BF;   
+	//SYSTICK_RVR = 0x1D4BF;  
+	
+	// SysTick Reload Value Register, 1ms interval using the Internal RC @12Mhz (pp. 403)
+	SYSTICK_RVR = 0x2EDF; 	
 	
 	// Clear Current Value Register (pp. 403)
 	SYSTICK_CVR = 0; 						

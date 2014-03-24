@@ -7,6 +7,8 @@
 #include "GPIO.h"
 
 #define PCF8574_I2C_ADDRESS		0x22
+#define HALF_STEP				1
+#define FULL_STEP 				2
 
 volatile int stepper_speed = 0;
 volatile int stepper_direction = 1;		// 1: Foreward,   -1: Reverse
@@ -23,9 +25,12 @@ void UART_RX_callback(uint8_t data) {
 }
 
 void Stepper_callback(uint32_t state) {
-	static uint32_t stepper_sequence[] = {0x0A, 0x09, 0x05, 0x06};		// This generates a memcpy() if changed to uint8_t[]
+	//static uint32_t stepper_sequence[] = {0x0A, 0x09, 0x05, 0x06};		// This generates a memcpy() if changed to uint8_t[]
+	//static uint32_t stepper_sequence[] = {0x0A, 0x0B, 0x09, 0x0D, 0x05, 0x07, 0x06, 0x0E};		// This generates a memcpy() if changed to uint8_t[]
+	static uint32_t stepper_sequence[] = {0x00, 0xFF, 0x00, 0xFF, 0x00, 0xFF, 0x00, 0xFF};		// This generates a memcpy() if changed to uint8_t[]
 	static int stepper_state = 0;
 	static uint32_t interval_counter = 0;
+	static uint32_t stepper_mode = HALF_STEP;
 	
 	uint8_t temp;
 	
@@ -46,24 +51,31 @@ void Stepper_callback(uint32_t state) {
 			// Issue the next stepper motor instruction based on current state and direction
 			if (stepper_direction == -1) {
 			
-				stepper_state--;
+				//stepper_state--;
+				stepper_state -= stepper_mode;
 				
 				// Reset index
-				if (stepper_state == -1) stepper_state = 3;
+				//if (stepper_state == -1) stepper_state = 3;
+				if (stepper_state < 0) stepper_state += 8;
 			
 				// Write stepper sequence to I2C
 				temp = (uint8_t) stepper_sequence[stepper_state];
+				temp |= 0x04;
+				
 				I2C_write(PCF8574_I2C_ADDRESS, &temp, 1);
 			
 			} else {
 				
-				stepper_state++;
+				//stepper_state++;
+				stepper_state += stepper_mode;
 			
 				// Reset index
-				if (stepper_state == 4) stepper_state = 0;
+				if (stepper_state == 8) stepper_state = 0;
 				
 				// Write stepper sequence to I2C
 				temp = (uint8_t) stepper_sequence[stepper_state];
+				temp &= 0xFB;
+				
 				I2C_write(PCF8574_I2C_ADDRESS, &temp, 1);
 			}	
 		}
@@ -95,7 +107,7 @@ void main() {
 	// Spped control instruction via UART 
 	UART_read(UART_RX_callback);
 	
-	// Despatch timer callbacks if available; or just wait
+	// Despatch timer callbacks if available; or idle
 	while(1) {
 		if (Callback_counter > 0) {
 			(Timer_callbacks[--Callback_counter])(0);
