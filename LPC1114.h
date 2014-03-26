@@ -28,9 +28,17 @@
 #define IOCON_PIO0_8   					MMIO(0x40044060)
 #define IOCON_PIO1_9   					MMIO(0x40044038)
 
-// GPIO Registers
-#define GPIO1DIR      					MMIO(0x50018000)
+// GPIO PORT 1 - Registers
 #define GPIO1DATA      					MMIO(0x50013FFC)
+#define GPIO1DIR      					MMIO(0x50018000)
+
+#define GPIO1_ISENSE					MMIO(0x50018004)
+#define GPIO1_IEDGES					MMIO(0x50018008)
+#define GPIO1_IEVENT					MMIO(0x5001800C)
+#define GPIO1_IENABLE					MMIO(0x50018010)
+#define GPIO1_IRAWSTAT					MMIO(0x50018014)
+#define GPIO1_IMASKSTAT					MMIO(0x50018018)
+#define GPIO1_ICLR						MMIO(0x5001801C)
 
 // SysTick Registers (WORD ADDR)
 #define SYSTICK_CSR						MMIO(0xE000E010) 
@@ -51,6 +59,7 @@
 // NVIC IRQs
 #define NVIC_I2C_BIT					15
 #define NVIC_UART_BIT					21
+#define NVIC_GPIO1_BIT					30
 
 // I2C Peripheral REgisters
 #define I2C_CTRL_SET					MMIO(0x40000000)
