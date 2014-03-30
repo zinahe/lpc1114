@@ -22,8 +22,13 @@ void UART_init(void) {
 	
 	// Set baud rate to 115200 kb/s @ UART_CLK of 12Mhz  (DLM = 0, DLL = 4, DIVADDVAL = 5, and MULVAL = 8)
 	// UART_DLM = 0x00;		// Default
-	UART_DLL = 0x04;
-	UART_FDR = 0x85;		// FDR = (MULVAL << 4 ) | DIVADDVAL
+	//UART_DLL = 0x04;
+	//UART_FDR = 0x85;		// FDR = (MULVAL << 4 ) | DIVADDVAL
+	
+	// Set baud rate to 115200 kb/s @ UART_CLK of 48Mhz  (DLM = 0, DLL = 17, DIVADDVAL = 8, and MULVAL = 15)
+	// UART_DLM = 0x00;		// Default
+	UART_DLL = 0x11;		
+	UART_FDR = 0xF8;		// FDR = (MULVAL << 4 ) | DIVADDVAL
 	
 	// Turn off DLAB
 	UART_LCR ^= (1 << UART_LCR_DLAB_BIT);

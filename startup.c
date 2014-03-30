@@ -1,4 +1,5 @@
 #include <stdint.h>
+#include "LPC1114.h"
 
 // Sections as defined in the linker script
 extern uint32_t __data_load; 
@@ -75,6 +76,24 @@ void (* __vectors[]) (void) __attribute__ ((section(".vectors"))) = {
 	0					// IRQ31
 };
 
+void SysPLL_init(void) {
+	
+	// Set Post and Feedback dividers (Input=12Mhz, Output=48Mhz, M=4, MSEL,M-1=3 , P=2)
+	SYSPLLCTRL = (0x03 << SYSPLLCTRL_MDIV_BIT) | (SYSPLLCTRL_PDIV_02 << SYSPLLCTRL_PDIV_BIT);
+	
+	// Power-up PLL block
+	PDCONFIG =  (PDCONFIG_SYSPLL_ON << PDCONFIG_SYSPLL_BIT) | (PDCONFIG & ~(1 << PDCONFIG_SYSPLL_BIT));
+	
+	// Wait for PLL lock 
+	while(SYSPLLSTAT != SYSPLLSTAT_LOCKED);
+	
+	// Select PLL as main clock source
+	MAINCLKSEL = MAINCLKSEL_PLLOUT;
+	MAINCLKUEN = MAINCLKUEN_OFF;
+	MAINCLKUEN = MAINCLKUEN_ON;
+	
+}
+
 void Reset_Handler(void) {
 
 	uint32_t *src, *dst;
@@ -91,6 +110,9 @@ void Reset_Handler(void) {
 	while (dst < &__bss_end) {
 		*dst++ = 0;
 	}
+	
+	// Initialize System PLL to 48Mhz
+	SysPLL_init();
 	
 	// Call main()
 	main();
