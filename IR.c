@@ -8,7 +8,7 @@
 #define IR_STATE_ON		1
 #define IR_STATE_OFF	2
 
-volatile uint16_t IR_timer;
+volatile uint32_t IR_timer;
 volatile uint32_t IR_code;
 volatile uint32_t IR_state;
 volatile uint32_t IR_bit_count;
@@ -20,7 +20,7 @@ void IR_Timer_callback(uint32_t state) {
 		IR_timer++;
 	} else {
 	
-		// IR pin Logical Low
+		// IR pin Logical Low (Watch for operator precedence b/n & and ==)
 		if ((GPIO1DATA & (1 << GPIO1_5)) == 0)  {
 			IR_timer++;
 		}
@@ -28,22 +28,6 @@ void IR_Timer_callback(uint32_t state) {
 	
 }
 
-//void UART_Timer_callback(uint32_t state) {
-
-	// Toggle LED
-	//GPIO1DATA ^= (1 << PIO1_9);
-
-	//uint16_t data;
-	//uint8_t data;
-	
-	//data = 0x1234;
-	//data = 'a';
-	
-	//UART_write(&IR_max_counter, 2);
-	//UART_write(&data, 2);
-			
-	//IR_max_counter = 0;
-//}
 
 void main() {
 
@@ -79,10 +63,6 @@ void main() {
 	Timer_t IR_timer = { 1, 0, 0, 0, IR_Timer_callback };
 	SysTick_run(&IR_timer);	
 	
-	// Create and setup UART timer
-	//Timer_t UART_timer = { 4000, 0, 0, 0, UART_Timer_callback };
-	//SysTick_run(&UART_timer);	
-	
 	// Despatch timer callbacks if available; or just wait
 	while(1) {
 		if (Callback_counter > 0) {
@@ -96,7 +76,7 @@ void GPIO1_Handler(void) {
 
 	// GPIO1_IMASKSTAT can be used to identify which pin is causing the interrupt 
 	
-	// Clear GPIO Edge Intrrupt signal
+	// Clear GPIO Edge Trigger Intrrupt Signal
 	GPIO1_ICLR = (1 << GPIO1_5);
 	
 	if (GPIO1DATA & (1 << GPIO1_5)) {
@@ -105,14 +85,12 @@ void GPIO1_Handler(void) {
 				
 		if (IR_state == IR_STATE_OFF) {
 		
-			// Check for the first 9ms pulse train during OFF state
+			// Check for the first 9ms pulse train during OFF state (Watch the difference beween bitwise & and logical &&)
 			if ((IR_timer >= 35) && (IR_timer <= 38)) {
 			
+				// Enter ON state
 				IR_state = IR_STATE_ON;
 				
-				// Turn ON LED
-				//GPIO1DATA = (1 << PIO1_9);
-	
 			}
 		}
 		
@@ -122,7 +100,7 @@ void GPIO1_Handler(void) {
 			
 		if (IR_state == IR_STATE_ON) {
 			
-			// IR Bit 1
+			// 1.12ms pulse width = IR Bit 1
 			if ((IR_timer >= 8) && (IR_timer <= 10)) {
 				IR_code++;
 				IR_bit_count++;
@@ -131,7 +109,7 @@ void GPIO1_Handler(void) {
 					IR_code = (IR_code << 1);
 			}
 			
-			// IR Bit 0
+			// 2.25ms pulse width = IR Bit 0
 			if ((IR_timer >= 3) && (IR_timer <= 6)) {
 				IR_bit_count++;
 				
@@ -139,22 +117,45 @@ void GPIO1_Handler(void) {
 					IR_code = (IR_code << 1);
 			}
 			
-			// Complete IR command
+			// 32 IR bits = Complete IR command
 			if (IR_bit_count == 32) {
+			
+				// Payload
 				UART_write(&IR_code, 4);
 				
+				/*
+				if (IR_code == 0x00FD00FF) {
+					
+				}
+				*/
+				
+				// Exit to OFF state
 				IR_state = IR_STATE_OFF;
 				IR_code = 0;
 				IR_bit_count = 0;
 				
-				// Toggle LED
-				//GPIO1DATA ^= (1 << PIO1_9);
 			}
-			
 		}
 		
-		// Reset timer on all Falling edge triggers
+		// Reset timer on all falling edge triggers
 		IR_timer = 0;
 	}
 }
 
+/* IR Buttons/Commands
+
+ON/OFF		0x00FD00FF 
+PLAY/PAUSE	0x00FDA05F
+>>			0x00FD609F
+<< 			0x00FD20DF
+Vol+		0x00FD807F
+VOL-		0x00FD906F
+UP			0x00FD50AF
+DOWN		0x00FD10EF 
+EQ			0x00FDB04F 
+0			0x00FD30CF
+1			0x00FD08F7
+2			0x00FD8877
+3			0x00FD48B7
+
+*/
