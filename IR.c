@@ -100,7 +100,7 @@ void GPIO1_Handler(void) {
 			
 		if (IR_state == IR_STATE_ON) {
 			
-			// 1.12ms pulse width = IR Bit 1
+			// 2.25ms pulse width = IR Bit 1
 			if ((IR_timer >= 8) && (IR_timer <= 10)) {
 				IR_code++;
 				IR_bit_count++;
@@ -109,7 +109,7 @@ void GPIO1_Handler(void) {
 					IR_code = (IR_code << 1);
 			}
 			
-			// 2.25ms pulse width = IR Bit 0
+			// 1.12ms pulse width = IR Bit 0
 			if ((IR_timer >= 3) && (IR_timer <= 6)) {
 				IR_bit_count++;
 				
@@ -123,11 +123,11 @@ void GPIO1_Handler(void) {
 				// Payload
 				UART_write(&IR_code, 4);
 				
-				/*
-				if (IR_code == 0x00FD00FF) {
-					
+				
+				if (IR_code == 0x00FDB04F) {
+					GPIO1DATA ^= (1 << PIO1_9);
 				}
-				*/
+				
 				
 				// Exit to OFF state
 				IR_state = IR_STATE_OFF;

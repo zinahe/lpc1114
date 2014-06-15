@@ -1,9 +1,8 @@
-#include <stdint.h>
+#include "LPC1114.h"
+
 #include "I2C.h"
 #include "UART.h"
-#include "lcd.h"
 #include "SysTick.h"
-#include "LPC1114.h"
 #include "GPIO.h"
 
 #define PCF8574_I2C_ADDRESS		0x22
@@ -25,9 +24,10 @@ void UART_RX_callback(uint8_t data) {
 }
 
 void Stepper_callback(uint32_t state) {
-	//static uint32_t stepper_sequence[] = {0x0A, 0x09, 0x05, 0x06};		// This generates a memcpy() if changed to uint8_t[]
-	//static uint32_t stepper_sequence[] = {0x0A, 0x0B, 0x09, 0x0D, 0x05, 0x07, 0x06, 0x0E};		// This generates a memcpy() if changed to uint8_t[]
-	static uint32_t stepper_sequence[] = {0x00, 0xFF, 0x00, 0xFF, 0x00, 0xFF, 0x00, 0xFF};		// This generates a memcpy() if changed to uint8_t[]
+	// These array definitions will generates a memcpy() if changed to uint8_t[]
+	static uint32_t stepper_sequence[] = {0x0A, 0x0B, 0x09, 0x0D, 0x05, 0x07, 0x06, 0x0E};		// L298 sequence
+	//static uint32_t stepper_sequence[] = {0x00, 0xFF, 0x00, 0xFF, 0x00, 0xFF, 0x00, 0xFF};		// Polulu 4988 sequence
+	
 	static int stepper_state = 0;
 	static uint32_t interval_counter = 0;
 	static uint32_t stepper_mode = HALF_STEP;
@@ -40,6 +40,7 @@ void Stepper_callback(uint32_t state) {
 		// Define a timer interval i.e. invesely proportional to the speed
 		interval_counter++;
 		
+		// Count up to current speed
 		if (interval_counter >= (21 - 2 * stepper_speed * stepper_direction)) {
 			
 			// Reset interval counter
@@ -60,7 +61,9 @@ void Stepper_callback(uint32_t state) {
 			
 				// Write stepper sequence to I2C
 				temp = (uint8_t) stepper_sequence[stepper_state];
-				temp |= 0x04;
+				
+				// Use for Polulu 4988
+				//temp |= 0x04;
 				
 				I2C_write(PCF8574_I2C_ADDRESS, &temp, 1);
 			
@@ -74,7 +77,9 @@ void Stepper_callback(uint32_t state) {
 				
 				// Write stepper sequence to I2C
 				temp = (uint8_t) stepper_sequence[stepper_state];
-				temp &= 0xFB;
+				
+				// Use for Polulu 4988
+				//temp &= 0xFB;
 				
 				I2C_write(PCF8574_I2C_ADDRESS, &temp, 1);
 			}	
@@ -92,16 +97,14 @@ void Stepper_callback(uint32_t state) {
 
 void main() {
 	
-	// Initialize LCD (which in turn initializes I2C and SysTick) and Turn ON backlight
-	lcd_init();	
-	lcd_set_backlight(LCD_BACKLIGHT_ON);
-	
-	// Initilize UART and GPIO
-	UART_init();
+	// Initialize SysTick, GPIO, I2C and UART
 	GPIO_init();
+	SysTick_init();
+	I2C_init();
+	UART_init();
 		
 	// Create and setup Steppr timer
-	Timer_t stepper_timer = { 1, 0, 0, 0, Stepper_callback };
+	Timer_t stepper_timer = { 20, 0, 0, 0, Stepper_callback };
 	SysTick_run(&stepper_timer);
 	
 	// Spped control instruction via UART 

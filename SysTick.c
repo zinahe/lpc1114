@@ -3,7 +3,7 @@
 #include "SysTick.h"
 
 static volatile uint32_t Wait_counter;
-static volatile Timer_t * volatile Timer_start;
+static volatile Timer_t * Timer_first;
 static volatile Timer_t * volatile Timer_current;
 
 void (* volatile Timer_callbacks[])(uint32_t) = { 0, 0, 0, 0, 0 };
@@ -13,10 +13,10 @@ volatile uint32_t Callback_counter;
 
 void SysTick_run(Timer_t * timer) {
 
-	if (Timer_start == 0) {
+	if (Timer_first == 0) {
 		
 		// Attach the very first timer
-		Timer_start = timer;
+		Timer_first = timer;
 		Timer_current = timer;
 		timer->next = timer;
 		
@@ -24,8 +24,8 @@ void SysTick_run(Timer_t * timer) {
 		SYSTICK_CSR |= (1 << SYSTICK_ENABLE_BIT);
 	} else {
 	
-		// Add new timer between start and current timers
-		timer->next = Timer_start;
+		// Add new timer between the first and current timer
+		timer->next = Timer_first;
 		Timer_current->next = timer;
 		Timer_current = timer;
 	}
@@ -50,9 +50,12 @@ void SysTick_init(void) {
 	// SysTick Reload Value Register, 10ms interval using the Internal RC @12Mhz (pp. 403)
 	//SYSTICK_RVR = 0x1D4BF;  
 	
-	// SysTick Reload Value Register, 1ms interval using the Internal RC @12Mhz (pp. 403)
-	SYSTICK_RVR = 0x2EDF; 	
+	// SysTick Reload Value Register, 1ms interval using the Internal RC @48Mhz (pp. 403)
+	//SYSTICK_RVR = 0xBB7F; 
 	
+	// SysTick Reload Value Register, 250usec interval using the Internal RC @48Mhz (pp. 403)
+	SYSTICK_RVR = 0x2EDF; 	
+		
 	// Clear Current Value Register (pp. 403)
 	SYSTICK_CVR = 0; 						
 	
@@ -61,7 +64,7 @@ void SysTick_init(void) {
 	SYSTICK_CSR |= (1 << SYSTICK_CLKSOURCE_BIT) | (1 << SYSTICK_TICKINT_BIT);
 	
 	// Initialize timer pointers
-	Timer_start = 0;
+	Timer_first = 0;
 	Timer_current = 0;
 	
 	// Initialize callback counter
@@ -72,7 +75,7 @@ void SysTick_Handler(void) {
 
 	Wait_counter++;
 	
-	if (Timer_start != 0) {
+	if (Timer_first != 0) {
 		
 		do {
 			// Icrement timer counter
@@ -92,7 +95,7 @@ void SysTick_Handler(void) {
 			}
 			
 			Timer_current = Timer_current->next;
-		} while (Timer_current->next != Timer_start);
+		} while (Timer_current->next != Timer_first);
 	}
 	
 }
