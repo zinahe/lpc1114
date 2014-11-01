@@ -3,47 +3,14 @@
 #include "SysTick.h"
 
 static volatile uint32_t Wait_counter;
-static volatile Timer_t * Timer_first;
+
+static Timer_t * Timer_first;
 static volatile Timer_t * volatile Timer_current;
 
-void (* volatile Timer_callbacks[])(uint32_t) = { 0, 0, 0, 0, 0 };
-volatile uint32_t Callback_counter;
+static void (* volatile Timer_callbacks[])(uint32_t) = { 0, 0, 0, 0, 0 };
+static volatile uint32_t Callback_counter;
 
 // Definitions
-
-void SysTick_run(Timer_t * timer) {
-
-	if (Timer_first == 0) {
-		
-		// Attach the very first timer
-		Timer_first = timer;
-		Timer_current = timer;
-		timer->next = timer;
-		
-		// Enable SysTick block
-		SYSTICK_CSR |= (1 << SYSTICK_ENABLE_BIT);
-	} else {
-	
-		// Add new timer between the first and current timer
-		timer->next = Timer_first;
-		Timer_current->next = timer;
-		Timer_current = timer;
-	}
-	
-}
-
-void wait(uint32_t time) {
-	
-	// Reset counter
-	Wait_counter = 0;
-	
-	// Enable SysTick block
-	SYSTICK_CSR |= (1 << SYSTICK_ENABLE_BIT);
-	
-	// Wait until SysTick increments counter enough times
-	while (Wait_counter < time);
-	
-}
 
 void SysTick_init(void) {
 	
@@ -69,6 +36,51 @@ void SysTick_init(void) {
 	
 	// Initialize callback counter
 	Callback_counter = 0;
+}
+
+void SysTick_add(Timer_t * timer) {
+
+	if (Timer_first == 0) {
+		
+		// Attach the very first timer
+		Timer_first = timer;
+		Timer_current = timer;
+		timer->next = timer;
+		
+		// Enable SysTick block
+		SYSTICK_CSR |= (1 << SYSTICK_ENABLE_BIT);
+	} else {
+	
+		// Add new timer between the first and current timer
+		timer->next = Timer_first;
+		Timer_current->next = timer;
+		Timer_current = timer;
+	}
+	
+}
+
+void SysTick_run(void) {
+
+	// Despatch timer callbacks if available; or just wait
+	while(1) {
+		if (Callback_counter > 0) {
+			(Timer_callbacks[--Callback_counter])(0);
+		}
+	}
+
+}
+
+void wait(uint32_t time) {
+	
+	// Reset counter
+	Wait_counter = 0;
+	
+	// Enable SysTick block
+	SYSTICK_CSR |= (1 << SYSTICK_ENABLE_BIT);
+	
+	// Wait until SysTick increments counter enough times
+	while (Wait_counter < time);
+	
 }
 
 void SysTick_Handler(void) {
