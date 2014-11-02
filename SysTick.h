@@ -15,11 +15,13 @@ typedef struct Timer {
 } Timer_t;
 
 // Delarations
+
+void SysTick_add(Timer_t *);
+void SysTick_run(void);
 void SysTick_init(void);
 void wait(uint32_t time);
-void SysTick_run(Timer_t *);
 
-extern void (* volatile Timer_callbacks[])(uint32_t);
-extern volatile uint32_t Callback_counter;
+//extern void (* volatile Timer_callbacks[])(uint32_t);
+//extern volatile uint32_t Callback_counter;
 
 #endif /* SYSTICK_H */
