@@ -1,8 +1,8 @@
 # Sources and targets
 TARGET			= main
 
-#SOURCE			= startup.c test_I2C.c I2C.c
-SOURCE			= startup.c test_SysTick.c GPIO.c SysTick.c 
+SOURCE			= startup.c test_I2C.c I2C.c
+#SOURCE			= startup.c test_SysTick.c GPIO.c SysTick.c 
 #SOURCE			= startup.c test_lcd.c SysTick.c I2C.c lcd.c
 #SOURCE			= startup.c test_SYSPLL.c UART.c SysTick.c lcd.c I2C.c GPIO.c SYSPLL.c
 #SOURCE			= startup.c IR.c GPIO.c UART.c SysTick.c 
