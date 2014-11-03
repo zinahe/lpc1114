@@ -14,9 +14,13 @@
 typedef struct I2CTask {
 	uint32_t address;					// I2C slave address
 	uint32_t action;					// I2C_READ, I2C_WRITE
+	
 	volatile uint8_t *buffer;
 	uint32_t count;
 	uint32_t current;
+
+	// uint32_t state;
+
 } I2CTask_t;
 
 

@@ -1,9 +1,7 @@
-#include <stdint.h>
-#include "LPC1114.h"
 #include "I2C.h"
 
-volatile I2CTask_t *i2c_task;
-volatile uint32_t I2C_continue;
+static volatile I2CTask_t *i2c_task;
+static volatile uint32_t I2C_continue;
 
 void I2C_init(void) {
 
@@ -18,8 +16,12 @@ void I2C_init(void) {
 	PRESETCTRL |= (1 << PRESETCTRL_I2C_BIT);
 	
 	// Set I2C Clock Rate (100KHz, CYCLE_H + CYCLE_L = 120, @12MHz system clock )
-	I2C_CLK_H = 0x3C;
-	I2C_CLK_L = 0x3C;
+	//I2C_CLK_H = 0x3C;
+	//I2C_CLK_L = 0x3C;
+	
+	// Set I2C Clock Rate (100KHz, CYCLE_H + CYCLE_L = 480, @48MHz system clock )
+	I2C_CLK_H = 0xF0;
+	I2C_CLK_L = 0xF0;
 		
 	// Enable I2C Interface (I2EN=1, SDA and SCL inputs are not ignored any more; )
 	I2C_CTRL_SET = (1 << I2C_CTRL_I2EN_BIT);
@@ -28,13 +30,13 @@ void I2C_init(void) {
 	NVIC_SETENA = (1 << NVIC_I2C_BIT);
 }
 
-//void I2C_write(uint8_t address, uint8_t byte) {
+
 void I2C_write(uint32_t address, uint8_t *byte, uint32_t count) {
 	
 	// Create and attach the global object
 	// Note: Creation needs to happen on every call to write(), hence volatile
-
-	volatile I2CTask_t task = { address, I2C_WRITE, byte, count, 0 };		
+	
+	volatile I2CTask_t task = { address, I2C_WRITE, byte, count, 0 };
 	i2c_task = &task;
 	
 	// Reset wait flag
@@ -50,7 +52,7 @@ void I2C_write(uint32_t address, uint8_t *byte, uint32_t count) {
 
 void I2C_read(uint32_t address, uint8_t *byte, uint32_t count) {
 
-	volatile I2CTask_t task = { address, I2C_READ, byte, count, 0 };		
+	volatile I2CTask_t task = { address, I2C_READ, byte, count, 0 };
 	i2c_task = &task;
 
 	// Reset wait flag
