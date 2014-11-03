@@ -1,7 +1,7 @@
 #include "I2C.h"
 
-volatile I2CTask_t *i2c_task;
-volatile uint32_t I2C_continue;
+static volatile I2CTask_t *i2c_task;
+static volatile uint32_t I2C_continue;
 
 void I2C_init(void) {
 
