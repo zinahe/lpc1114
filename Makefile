@@ -18,7 +18,7 @@ MCU				= cortex-m0
 CC 				= arm-none-eabi-gcc
 OBJCOPY 		= arm-none-eabi-objcopy
 OBJDUMP			= arm-none-eabi-objdump
-RM 				= del
+RM 				= rm
 ECHO			= echo
 
 # C Compiler Optons
