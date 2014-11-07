@@ -1,4 +1,5 @@
 #include "lcd.h"
+#include "SysTick.h"
 
 int main() {
 
@@ -6,15 +7,16 @@ int main() {
 	lcd_init();
 		
     // Turn on LCD back-light
-    lcd_set_backlight(LCD_BACKLIGHT_ON);
+	// lcd_set_backlight(LCD_BACKLIGHT_ON);
+    lcd_backlight_ON();
 
 	while(1) {
-		lcd_write("Hello New");
-		wait(75);
+		lcd_write("Time to Sleep.");
+		wait(4000);
 		lcd_clear();
 		
-		lcd_write("Hello Old");
-		wait(75);
+		lcd_write("Zinahe Asnake.");
+		wait(4000);
 		lcd_clear();
 	}
 		

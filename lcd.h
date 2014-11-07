@@ -7,15 +7,15 @@
 #define LCD_I2C_ADDR 0x20
 
 // I2C to HD44780 Mapping
-#define LCD_RS				0
+#define LCD_RS				0								// Register Select: INSTRUCTION, DATA, STATUS
 #define LCD_DATA 			(1 << LCD_RS)
 #define LCD_INSTRUCTION 	0x00
 
-#define LCD_RW				1
+#define LCD_RW				1								// Read/Write 
 #define LCD_READ			(1 << LCD_RW)			
 #define LCD_WRITE			0x00
 
-#define LCD_EN				2
+#define LCD_EN				2								// Enable
 
 #define LCD_BACKLIGHT_PIN	3
 #define LCD_BACKLIGHT_ON	(1 << LCD_BACKLIGHT_PIN)
@@ -57,11 +57,9 @@
 
 void lcd_init(void) ;
 
-//void lcd_send_nibble(uint8_t nibble, uint8_t reg);
-
-//void lcd_send_byte(uint8_t nibble, uint8_t reg);
-
-void lcd_set_backlight(uint8_t backlight);
+//void lcd_set_backlight(uint8_t backlight);
+void lcd_backlight_ON(void);
+void lcd_backlight_OFF(void);
 
 void lcd_clear(void) ;
 

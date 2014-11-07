@@ -4,7 +4,7 @@
 #include "I2C.h"
 #include "lcd.h"		
 
-volatile uint8_t lcd_backlight;
+static uint8_t lcd_backlight;
 
 static void lcd_send_nibble(uint8_t nibble, uint8_t reg) {
 
@@ -37,12 +37,12 @@ void lcd_init(void) {
 	SysTick_init();
 
 	// HD44780 4bit initialization sequence
-	//_delay_ms(60);
-	wait(6);
+	// Wait 60ms 
+	wait(240);
 	lcd_send_nibble(CMD_FUNCTION_SET | EIGHT_BIT, LCD_INSTRUCTION);	
 	
-	//_delay_ms(4);
-	wait(1);
+	// Wait 4ms
+	wait(16);
 	lcd_send_nibble(CMD_FUNCTION_SET | EIGHT_BIT, LCD_INSTRUCTION);		
 	lcd_send_nibble(CMD_FUNCTION_SET | EIGHT_BIT, LCD_INSTRUCTION);		
 	lcd_send_nibble(CMD_FUNCTION_SET | FOUR_BIT,  LCD_INSTRUCTION);		
@@ -55,8 +55,9 @@ void lcd_init(void) {
 
 	// HD44780 Clear Display
 	lcd_send_byte(CMD_CLEAR, LCD_INSTRUCTION);
-	//_delay_ms(4);
-	wait(1);
+	
+	// Wait 4ms
+	wait(16);
 
 	// HD44780 Set Entry Mode
 	lcd_send_byte(CMD_ENTRY_MODE | INCREMENT | SHIFT_OFF, LCD_INSTRUCTION);
@@ -66,9 +67,12 @@ void lcd_init(void) {
 }
 
 void lcd_clear(void) {
+
+	// Send CLEAR instruction
 	lcd_send_byte(CMD_CLEAR, LCD_INSTRUCTION);
-	//_delay_ms(4);
-	wait(1);
+
+	// Wait 4ms
+	wait(16);
 }
 
 void lcd_write(char *s) {
@@ -83,6 +87,8 @@ void lcd_write(char *s) {
 void lcd_goto(uint32_t y, uint32_t x) {
 	uint8_t ddram_addr;
 
+	ddram_addr = 0;
+	
 	if (y == 0) {
 		ddram_addr = CMD_DDRAM_ADDR + x;
 	} else if (y == 1) {
@@ -96,10 +102,25 @@ void lcd_goto(uint32_t y, uint32_t x) {
 	lcd_send_byte(ddram_addr, LCD_INSTRUCTION);
 }
 
-void lcd_set_backlight(uint8_t backlight) {
+/* void lcd_set_backlight(uint8_t backlight) {
 
 	lcd_backlight = backlight;
 
 	I2C_write(LCD_I2C_ADDR, &backlight, 1);
 	
+} */
+
+void lcd_backlight_ON() {
+
+	lcd_backlight = LCD_BACKLIGHT_ON;
+
+	I2C_write(LCD_I2C_ADDR, &lcd_backlight, 1);
 }
+
+void lcd_backlight_OFF() {
+
+	lcd_backlight = LCD_BACKLIGHT_OFF;
+
+	I2C_write(LCD_I2C_ADDR, &lcd_backlight, 1);
+}
+
