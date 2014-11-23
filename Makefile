@@ -1,9 +1,10 @@
 # Sources and targets
 TARGET			= main
 
+SOURCE			= startup.c memcpy.c 
 #SOURCE			= startup.c test_I2C.c I2C.c
 #SOURCE			= startup.c test_SysTick.c GPIO.c SysTick.c 
-SOURCE			= startup.c test_lcd.c SysTick.c I2C.c lcd.c
+#SOURCE			= startup.c test_lcd.c SysTick.c I2C.c lcd.c
 #SOURCE			= startup.c test_SYSPLL.c UART.c SysTick.c lcd.c I2C.c GPIO.c SYSPLL.c
 #SOURCE			= startup.c IR.c GPIO.c UART.c SysTick.c 
 #SOURCE			= startup.c test_Stepper.c UART.c SysTick.c lcd.c I2C.c GPIO.c
@@ -32,12 +33,16 @@ CFLAGS+= -fdata-sections # 			  Create a separate data section
 CFLAGS+= -std=c99 # 				  Comply with C99
 CFLAGS+= -Wall # 					  Enable All Warnings 
 CFLAGS+= -fno-common #				  Disable COMMON sections
+CFLAGS+= -fno-builtin #
 CFLAGS+= -Wa,-adhlns=$(<:%.c=%.lst) # Generate assembly files
+# CFLAGS+= -fdump-tree-all #          Dump GIMPLE/SSA passes
+# CFLAGS+= -fdump-rtl-all -da #       Dump RTL passes
 
 # Linker Options
 LDFLAGS=-Wl,--gc-sections # 						Linker to ignore sections that aren't used.
 LDFLAGS+= -Wl,-Map,$(TARGET).map #					Generate memory map file
-LDFLAGS+= -Wl,-T,".\$(TARGET).ld" # 	Path to Linker Script
+LDFLAGS+= -Wl,-T,".\$(TARGET).ld" # 				Path to Linker Script
+LDFLAGS+= -Wl,--build-id=none #						Do NOT require a .note.gnu.build-id section (as of GCC 4.9)
 LDFLAGS+= -nostdlib
 # LDFLAGS+= -nostartfiles
 
