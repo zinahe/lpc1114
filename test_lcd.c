@@ -11,7 +11,7 @@ int main() {
     lcd_backlight_ON();
 
 	while(1) {
-		lcd_write("Time to Sleep.");
+		lcd_write("Testing LCD.");
 		wait(4000);
 		lcd_clear();
 		
