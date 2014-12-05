@@ -18,14 +18,13 @@ typedef struct I2CTask {
 	volatile uint8_t *buffer;
 	uint32_t count;
 	uint32_t current;
-
-	// uint32_t state;
+	uint32_t is_busy;
 
 } I2CTask_t;
 
 
 void I2C_init(void);
-void I2C_write(uint32_t address, uint8_t *byte, uint32_t count);
-void I2C_read(uint32_t address, uint8_t *byte, uint32_t count);
+void I2C_write(uint32_t address, uint8_t *buffer, uint32_t count);
+void I2C_read(uint32_t address, uint8_t *buffer, uint32_t count);
 
 #endif /* I2C_H */

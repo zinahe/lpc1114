@@ -1,7 +1,7 @@
 #include "I2C.h"
 
 static volatile I2CTask_t *i2c_task;
-static volatile uint32_t I2C_continue;
+//static volatile uint32_t I2C_continue;
 
 void I2C_init(void) {
 
@@ -31,38 +31,58 @@ void I2C_init(void) {
 }
 
 
-void I2C_write(uint32_t address, uint8_t *byte, uint32_t count) {
+void I2C_write(uint32_t address, uint8_t *buffer, uint32_t count) {
 	
-	// Create and attach the global object
-	// Note: Creation needs to happen on every call to write(), hence volatile
+	// Create and initialize an I2C task object
+	// Note: The task object will be manipulated by an hardware interrupt handler, hence volatile
 	
-	volatile I2CTask_t task = { address, I2C_WRITE, byte, count, 0 };
+	//volatile I2CTask_t task = { address, I2C_WRITE, buffer, count, 0 };
+
+	volatile I2CTask_t task;
+	task.address = address;
+	task.action = I2C_WRITE;
+	task.buffer = buffer;
+	task.count = count;
+	task.current = 0;
+	task.is_busy = TRUE;		// Set busy flag
+	
 	i2c_task = &task;
 	
 	// Reset wait flag
-	I2C_continue = FALSE;
+	//I2C_continue = FALSE;
 	
 	// Transmit START condition (triggers the start of a hardware state machine)
 	I2C_CTRL_SET = (1 << I2C_CTRL_STA_BIT);
 	
-	// Wait on flag (until all bytes in the buffer are sent)
-	while(!I2C_continue);
+	// Wait on busy flag (until all bytes in the buffer are sent)
+	//while(!I2C_continue);
+	while(task.is_busy);
 	
 }
 
-void I2C_read(uint32_t address, uint8_t *byte, uint32_t count) {
+void I2C_read(uint32_t address, uint8_t *buffer, uint32_t count) {
 
-	volatile I2CTask_t task = { address, I2C_READ, byte, count, 0 };
+	//volatile I2CTask_t task = { address, I2C_READ, buffer, count, 0 };
+
+	volatile I2CTask_t task;
+	task.address = address;
+	task.action = I2C_READ;
+	task.buffer = buffer;
+	task.count = count;
+	task.current = 0;
+	task.is_busy = TRUE;		// Set busy flag
+
 	i2c_task = &task;
 
 	// Reset wait flag
-	I2C_continue = FALSE;
+	//I2C_continue = FALSE;
 	
 	// Transmit START condition (triggers the start of a hardware state machine)
 	I2C_CTRL_SET = (1 << I2C_CTRL_STA_BIT);
 	
-	// Wait on flag (until all bytes in the buffer are sent)
-	while(!I2C_continue);
+	// Wait on busy flag (until all expected bytes are received in the buffer)
+	//while(!I2C_continue);
+	while(task.is_busy);
 	
 }
 
@@ -97,8 +117,9 @@ void I2C_Handler(void) {
 			} 
 			else {
 				
-				// Flag to continue
-				I2C_continue = TRUE;
+				// Reset busy flag (continue)
+				//I2C_continue = TRUE;
+				i2c_task->is_busy = FALSE;	
 				
 				// Transmit STOP condition
 				I2C_CTRL_SET = (1 << I2C_CTRL_STO_BIT);
@@ -132,8 +153,9 @@ void I2C_Handler(void) {
 			
 		case 0x48:				// Master Receiver Mode: Slave ADDR + READ sent, and NOT ACK received.
 		
-			// Flag to continue
-			I2C_continue = TRUE;
+			// Reset busy flag (continue)
+			//I2C_continue = TRUE;
+			i2c_task->is_busy = FALSE;			
 		
 			// Transmit STOP condition  (Release I2C bus)
 			I2C_CTRL_SET = (1 << I2C_CTRL_STO_BIT);
@@ -171,8 +193,9 @@ void I2C_Handler(void) {
 			// Copy last byte to buffer
 			i2c_task->buffer[i2c_task->current++] = (uint8_t) I2C_DATA;
 			
-			// Flag to continue
-			I2C_continue = TRUE;
+			// Reset busy flag (continue)
+			//I2C_continue = TRUE;
+			i2c_task->is_busy = FALSE;		
 			
 			// Transmit STOP condition  (Release I2C bus)
 			I2C_CTRL_SET = (1 << I2C_CTRL_STO_BIT);
