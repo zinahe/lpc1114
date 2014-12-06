@@ -1,7 +1,7 @@
 #include "I2C.h"
 
-static volatile I2CTask_t *i2c_task;
-//static volatile uint32_t I2C_continue;
+// Note: The task object will be manipulated by an hardware interrupt handler, hence volatile
+static volatile I2CTask_t i2c_task;
 
 void I2C_init(void) {
 
@@ -28,61 +28,51 @@ void I2C_init(void) {
 	
 	// Enable I2C Interrupt
 	NVIC_SETENA = (1 << NVIC_I2C_BIT);
+
+	// I2C ready
+	i2c_task.is_busy = FALSE;
 }
 
 
 void I2C_write(uint32_t address, uint8_t *buffer, uint32_t count) {
 	
-	// Create and initialize an I2C task object
-	// Note: The task object will be manipulated by an hardware interrupt handler, hence volatile
-	
-	//volatile I2CTask_t task = { address, I2C_WRITE, buffer, count, 0 };
+	// Wait until I2C is free (NOT busy)
+	while(i2c_task.is_busy);
 
-	volatile I2CTask_t task;
-	task.address = address;
-	task.action = I2C_WRITE;
-	task.buffer = buffer;
-	task.count = count;
-	task.current = 0;
-	task.is_busy = TRUE;		// Set busy flag
-	
-	i2c_task = &task;
-	
-	// Reset wait flag
-	//I2C_continue = FALSE;
+	// Initialize task object for writing
+	i2c_task.address = address;
+	i2c_task.action = I2C_WRITE;
+	i2c_task.buffer = buffer;
+	i2c_task.count = count;
+	i2c_task.current = 0;
+	i2c_task.is_busy = TRUE;		// Set busy flag
 	
 	// Transmit START condition (triggers the start of a hardware state machine)
 	I2C_CTRL_SET = (1 << I2C_CTRL_STA_BIT);
 	
 	// Wait on busy flag (until all bytes in the buffer are sent)
-	//while(!I2C_continue);
-	while(task.is_busy);
+	//while(i2c_task.is_busy);
 	
 }
 
 void I2C_read(uint32_t address, uint8_t *buffer, uint32_t count) {
 
-	//volatile I2CTask_t task = { address, I2C_READ, buffer, count, 0 };
+	// Wait until I2C is free (NOT busy)
+	while(i2c_task.is_busy);
 
-	volatile I2CTask_t task;
-	task.address = address;
-	task.action = I2C_READ;
-	task.buffer = buffer;
-	task.count = count;
-	task.current = 0;
-	task.is_busy = TRUE;		// Set busy flag
+	// Initialize task object for reading
+	i2c_task.address = address;
+	i2c_task.action = I2C_READ;
+	i2c_task.buffer = buffer;
+	i2c_task.count = count;
+	i2c_task.current = 0;
+	i2c_task.is_busy = TRUE;		// Set busy flag
 
-	i2c_task = &task;
-
-	// Reset wait flag
-	//I2C_continue = FALSE;
-	
 	// Transmit START condition (triggers the start of a hardware state machine)
 	I2C_CTRL_SET = (1 << I2C_CTRL_STA_BIT);
 	
-	// Wait on busy flag (until all expected bytes are received in the buffer)
-	//while(!I2C_continue);
-	while(task.is_busy);
+	// Wait until all expected bytes are received in the buffer
+	while(i2c_task.is_busy);
 	
 }
 
@@ -92,7 +82,7 @@ void I2C_Handler(void) {
 		case 0x08:				// Master Transmitter/Receiver Mode: START condition successful
 			
 			// Load I2C slave address and data direction (Read/Write)
-			I2C_DATA = (i2c_task->address << 1) | i2c_task->action;
+			I2C_DATA = (i2c_task.address << 1) | i2c_task.action;
 			
 			// Clear SI and STA bits
 			I2C_CTRL_CLR = (1 << I2C_CTRL_STA_BIT) | (1 << I2C_CTRL_SI_BIT);
@@ -101,7 +91,7 @@ void I2C_Handler(void) {
 		case 0x18:				// Master Transmitter Mode: Slave ADDR + WRITE sent, and ACK received. 
 		
 			// Send first byte from buffer
-			I2C_DATA = (uint32_t) i2c_task->buffer[i2c_task->current++];
+			I2C_DATA = (uint32_t) i2c_task.buffer[i2c_task.current++];
 			
 			// Clear the SI bit
 			I2C_CTRL_CLR = (1 << I2C_CTRL_SI_BIT);
@@ -110,16 +100,16 @@ void I2C_Handler(void) {
 		case 0x28:				// Master Transmitter Mode: DATA transmitted
 		
 				
-			if (i2c_task->current < i2c_task->count) {
+			if (i2c_task.current < i2c_task.count) {
 			
 				// Load next available byte from buffer
-				I2C_DATA = (uint32_t) i2c_task->buffer[i2c_task->current++];
+				I2C_DATA = (uint32_t) i2c_task.buffer[i2c_task.current++];
 			} 
 			else {
 				
 				// Reset busy flag (continue)
 				//I2C_continue = TRUE;
-				i2c_task->is_busy = FALSE;	
+				i2c_task.is_busy = FALSE;	
 				
 				// Transmit STOP condition
 				I2C_CTRL_SET = (1 << I2C_CTRL_STO_BIT);
@@ -134,7 +124,7 @@ void I2C_Handler(void) {
 			// This state gives us a chance to set the very first AA bit 
 			// based on how many bytes are to be sent
 			
-			if (i2c_task->current < i2c_task->count - 1) {
+			if (i2c_task.current < i2c_task.count - 1) {
 				
 				// Set Acknowledge bit = ACK (more bytes to come)
 				I2C_CTRL_SET = (1 << I2C_CTRL_AA_BIT);
@@ -155,7 +145,7 @@ void I2C_Handler(void) {
 		
 			// Reset busy flag (continue)
 			//I2C_continue = TRUE;
-			i2c_task->is_busy = FALSE;			
+			i2c_task.is_busy = FALSE;			
 		
 			// Transmit STOP condition  (Release I2C bus)
 			I2C_CTRL_SET = (1 << I2C_CTRL_STO_BIT);
@@ -168,10 +158,10 @@ void I2C_Handler(void) {
 		case 0x50:				// Master Receiver Mode: Byte has been received, ACK has been returned
 			
 			// Copy received byte to buffer
-			i2c_task->buffer[i2c_task->current++] = (uint8_t) I2C_DATA;
+			i2c_task.buffer[i2c_task.current++] = (uint8_t) I2C_DATA;
 			
 			// Prepare AA bit for the next bytes (if any)
-			if (i2c_task->current < i2c_task->count - 1) {
+			if (i2c_task.current < i2c_task.count - 1) {
 				
 				// Set Acknowledge bit = ACK (more types to come)
 				I2C_CTRL_SET = (1 << I2C_CTRL_AA_BIT);
@@ -191,11 +181,11 @@ void I2C_Handler(void) {
 		case 0x58:				// Master Receiver Mode: Byte has been received, NACK has been returned
 		
 			// Copy last byte to buffer
-			i2c_task->buffer[i2c_task->current++] = (uint8_t) I2C_DATA;
+			i2c_task.buffer[i2c_task.current++] = (uint8_t) I2C_DATA;
 			
 			// Reset busy flag (continue)
 			//I2C_continue = TRUE;
-			i2c_task->is_busy = FALSE;		
+			i2c_task.is_busy = FALSE;		
 			
 			// Transmit STOP condition  (Release I2C bus)
 			I2C_CTRL_SET = (1 << I2C_CTRL_STO_BIT);
