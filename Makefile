@@ -1,7 +1,8 @@
 # Sources and targets
 TARGET			= main
 
-SOURCE			= startup.c test_I2C.c I2C.c
+SOURCE			= startup.c test_oled.c I2C.c SysTick.c oled.c
+#SOURCE			= startup.c test_I2C.c I2C.c
 #SOURCE			= startup.c test_SysTick.c GPIO.c SysTick.c 
 #SOURCE			= startup.c test_lcd.c SysTick.c I2C.c lcd.c
 #SOURCE			= startup.c test_SYSPLL.c UART.c SysTick.c lcd.c I2C.c GPIO.c SYSPLL.c
@@ -35,9 +36,10 @@ CFLAGS+= -fno-common #				  Disable COMMON sections
 CFLAGS+= -Wa,-adhlns=$(<:%.c=%.lst) # Generate assembly files
 
 # Linker Options
-LDFLAGS=-Wl,--gc-sections # 						Linker to ignore sections that aren't used.
-LDFLAGS+= -Wl,-Map,$(TARGET).map #					Generate memory map file
+LDFLAGS=-Wl,--gc-sections # 			Linker to ignore sections that aren't used.
+LDFLAGS+= -Wl,-Map,$(TARGET).map #		Generate memory map file
 LDFLAGS+= -Wl,-T,".\$(TARGET).ld" # 	Path to Linker Script
+LDFLAGS+= -Wl,--build-id=none # 		Do NOT expect build-id section in linker file (GCC 4.9)	
 LDFLAGS+= -nostdlib
 # LDFLAGS+= -nostartfiles
 

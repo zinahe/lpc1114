@@ -19,28 +19,29 @@ SECTIONS {
     } >flash
 
     .text : {
+		. = ALIGN(4);
         *(.text .text*)
 		*(.rodata .rodata*)
-        /* __data_load = .;  */
+		. = ALIGN(4); 
     } >flash
 
     .data : {
 		__data_load = LOADADDR(.data); 
         __data_start = .;
         *(.data .data*)
+	
+		. = ALIGN(4);
         __data_end = .;
     } >ram AT >flash
 
     .bss : {
         __bss_start = .;
         *(.bss .bss*)
+    	
+		. = ALIGN(4);
         __bss_end = .;
     } >ram
 
-    . = ALIGN(4);
-	
-	/* __ram_end = 0x10001FFC; */
-	/* __ram_end = 0x10002000; */
 	__ram_end = ORIGIN(ram) + LENGTH(ram); 
 }
  
