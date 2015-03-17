@@ -8,7 +8,7 @@ ENTRY(Reset_Handler)
 
 MEMORY {
     flash   :   ORIGIN = 0x00000000, LENGTH = 32k
-    ram     :   ORIGIN = 0x10000000, LENGTH = 8k
+    ram     :   ORIGIN = 0x10000000, LENGTH = 4k
 }
 
 SECTIONS {
