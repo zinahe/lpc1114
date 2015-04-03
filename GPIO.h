@@ -1,7 +1,8 @@
 #ifndef GPIO_H
 #define GPIO_H
 
-// LED pin
+// GPIO1 pins
+#define PIO1_8 							8
 #define PIO1_9 							9
 
 void GPIO_init(void);

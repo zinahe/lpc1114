@@ -24,11 +24,14 @@
 #define IOCON_PIO1_6					MMIO(0x400440A4)		// RX pin
 #define IOCON_PIO1_7					MMIO(0x400440A8)		// TX pin
 
-// IOCON - GPIO
+// IOCON - GPIO0
 #define IOCON_PIO0_8   					MMIO(0x40044060)
+
+// IOCON - GPIO1
+#define IOCON_PIO1_8   					MMIO(0x40044014)
 #define IOCON_PIO1_9   					MMIO(0x40044038)
 
-// GPIO PORT 1 - Registers
+// GPIO1 - Registers
 #define GPIO1DATA      					MMIO(0x50013FFC)
 #define GPIO1DIR      					MMIO(0x50018000)
 
