@@ -17,6 +17,7 @@ typedef struct Timer {
 // Delarations
 
 void SysTick_add(Timer_t *);
+void SysTick_remove(Timer_t *);
 void SysTick_run(void);
 void SysTick_init(void);
 void wait(uint32_t time);

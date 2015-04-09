@@ -3,14 +3,10 @@
 #include "SysTick.h"
 
 static volatile uint32_t Wait_counter;
-
 static Timer_t * Timer_first;
-static volatile Timer_t * volatile Timer_current;
 
-static void (* volatile Timer_callbacks[])(uint32_t) = { 0, 0, 0, 0, 0 };
-static volatile uint32_t Callback_counter;
-
-// Definitions
+void (* volatile Timer_callbacks[])(uint32_t) = { 0, 0, 0, 0, 0 };
+volatile uint32_t Callback_counter;
 
 void SysTick_init(void) {
 	
@@ -26,37 +22,84 @@ void SysTick_init(void) {
 	// Clear Current Value Register (pp. 403)
 	SYSTICK_CVR = 0; 						
 	
-	// Enable SysTick, on CPU clock and Enable SysTick interrupt (pp. 402)
+	// Enable SysTick counter, Select clock source (1=CPU, 0=CPU/2), Enable SysTick interrupt (pp. 402)
 	//SYSTICK_CSR |= (1 << SYSTICK_CLKSOURCE_BIT) | (1 << SYSTICK_TICKINT_BIT) | (1 << SYSTICK_ENABLE_BIT);
+	
+	// Select clock source (1=CPU, 0=CPU/2), Enable SysTick interrupt (pp. 402)
 	SYSTICK_CSR |= (1 << SYSTICK_CLKSOURCE_BIT) | (1 << SYSTICK_TICKINT_BIT);
 	
 	// Initialize timer pointers
 	Timer_first = 0;
-	Timer_current = 0;
 	
 	// Initialize callback counter
 	Callback_counter = 0;
 }
 
 void SysTick_add(Timer_t * timer) {
+	Timer_t * _timer;
+	int _exists = 0;
 
 	if (Timer_first == 0) {
 		
-		// Attach the very first timer
+		// Attach the first timer to pointers
 		Timer_first = timer;
-		Timer_current = timer;
+		//Timer_current = timer;
 		timer->next = timer;
 		
-		// Enable SysTick block
+		// Enable SysTick counter on first timer
 		SYSTICK_CSR |= (1 << SYSTICK_ENABLE_BIT);
 	} else {
-	
-		// Add new timer between the first and current timer
-		timer->next = Timer_first;
-		Timer_current->next = timer;
-		Timer_current = timer;
+
+		// Search if it already exists in queue	
+		_timer = Timer_first;
+		do {
+
+			_exists = (_timer == timer);
+			if (_exists) break;
+
+			if (_timer->next == Timer_first) {
+				_timer->next = timer;
+				timer->next = Timer_first;
+				break; 		// NOTE: This will prevent testing of new timer
+			}
+
+			_timer = _timer->next;	
+		} while (_timer != Timer_first);
+
+/*		if (!_exists){
+			// Add new timer between the first and current timer
+			timer->next = Timer_first;
+			Timer_current->next = timer;
+			Timer_current = timer;
+		} */
 	}
 	
+}
+
+void SysTick_remove(Timer_t * timer) {
+
+	Timer_t * _timer;
+
+	if (Timer_first != 0) {
+
+		_timer = Timer_first;
+		do {
+			// Check if the next timer is the one to be removed	
+			if (_timer->next == timer) {
+
+				_timer->next = timer->next;
+				timer->next = 0;
+				
+				if (Timer_first == timer)
+					Timer_first = _timer->next;
+
+				break;
+			}
+
+			_timer = _timer->next;	
+		} while (_timer != Timer_first);
+
+	}
 }
 
 void SysTick_run(void) {
@@ -85,29 +128,55 @@ void wait(uint32_t time) {
 
 void SysTick_Handler(void) {
 
+	Timer_t * _timer;
 	Wait_counter++;
 	
 	if (Timer_first != 0) {
-		
+
+		_timer = Timer_first;
 		do {
-			// Icrement timer counter
-			Timer_current->next->counter++;
+			// Increment timer counter
+			_timer->counter++;
 		
-			// Toggle timer state
-			//Timer_current->next->state ^= 0xFF;
+			// TODO: Maintain timer state
 		
-			// Reset counter and enqueue callback function pointer
-			if (Timer_current->next->interval == Timer_current->next->counter) {
-			
-				// Timer_current->next->callback(Timer_current->next->state);
-				// Timer_current->next->callback(0);
-				Timer_callbacks[Callback_counter++] = Timer_current->next->callback;
+			// Check current count against timer interval setting
+			if (_timer->interval == _timer->counter) {
 				
-				Timer_current->next->counter = 0;
+				// Enqueue callback function
+				Timer_callbacks[Callback_counter++] = _timer->callback;
+
+				// Reset counter	
+				_timer->counter = 0;
 			}
 			
-			Timer_current = Timer_current->next;
-		} while (Timer_current->next != Timer_first);
+			_timer = _timer->next;
+		} while (_timer != Timer_first);
 	}
 	
 }
+
+//static void (* volatile Timer_callbacks[])(uint32_t) = { 0, 0, 0, 0, 0 };
+//static volatile uint32_t Callback_counter;
+
+/*	
+	if (Timer_first != 0) {
+
+		do {
+			// Check if the next timer is the one to be removed	
+			if (Timer_current->next == timer) {
+				Timer_current->next = timer->next;
+				timer->next = 0;
+			}
+
+			// Jump to the next timer
+			Timer_current = Timer_current->next;	
+
+			// Check if it's the last timer to be removed
+			if (Timer_current->next == 0) {
+				Timer_first = 0;
+			}
+
+		} while (Timer_current->next != Timer_first);
+
+	} */
